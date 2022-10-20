@@ -50,7 +50,7 @@ class UnivNetModel(Vocoder, Exportable):
 
         super().__init__(cfg=cfg, trainer=trainer)
 
-        self.audio_to_melspec_precessor = instantiate(cfg.preprocessor)
+        self.audio_to_melspec_preprocessor = instantiate(cfg.preprocessor)
         # We use separate preprocessor for training, because we need to pass grads and remove pitch fmax limitation
         self.trg_melspec_fn = instantiate(cfg.preprocessor, highfreq=None, use_grads=True)
         self.generator = instantiate(
@@ -116,7 +116,7 @@ class UnivNetModel(Vocoder, Exportable):
             audio, audio_len, audio_mel = batch
         else:
             audio, audio_len = batch
-            audio_mel, _ = self.audio_to_melspec_precessor(audio, audio_len)
+            audio_mel, _ = self.audio_to_melspec_preprocessor(audio, audio_len)
 
         audio = audio.unsqueeze(1)
 
@@ -175,16 +175,16 @@ class UnivNetModel(Vocoder, Exportable):
             audio_mel_len = [audio_mel.shape[1]] * audio_mel.shape[0]
         else:
             audio, audio_len = batch
-            audio_mel, audio_mel_len = self.audio_to_melspec_precessor(audio, audio_len)
+            audio_mel, audio_mel_len = self.audio_to_melspec_preprocessor(audio, audio_len)
         audio_pred = self(spec=audio_mel)
 
         # Perform bias denoising
         pred_denoised = self._bias_denoise(audio_pred, audio_mel).squeeze(1)
-        pred_denoised_mel, _ = self.audio_to_melspec_precessor(pred_denoised, audio_len)
+        pred_denoised_mel, _ = self.audio_to_melspec_preprocessor(pred_denoised, audio_len)
 
         if self.input_as_mel:
-            gt_mel, gt_mel_len = self.audio_to_melspec_precessor(audio, audio_len)
-        audio_pred_mel, _ = self.audio_to_melspec_precessor(audio_pred.squeeze(1), audio_len)
+            gt_mel, gt_mel_len = self.audio_to_melspec_preprocessor(audio, audio_len)
+        audio_pred_mel, _ = self.audio_to_melspec_preprocessor(audio_pred.squeeze(1), audio_len)
         loss_mel = F.l1_loss(audio_mel, audio_pred_mel)
 
         self.log_dict({"val_loss": loss_mel}, on_epoch=True, sync_dist=True)

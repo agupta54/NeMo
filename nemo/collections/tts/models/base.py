@@ -100,7 +100,7 @@ class Vocoder(ModelPT, ABC):
 
 class GlowVocoder(Vocoder):
     """ Base class for all Vocoders that use a Glow or reversible Flow-based setup. All child class are expected
-    to have a parameter called audio_to_melspec_processor that is an instance of
+    to have a parameter called audio_to_melspec_preprocessor that is an instance of
     nemo.collections.asr.parts.FilterbankFeatures"""
 
     def __init__(self, *args, **kwargs):
@@ -134,15 +134,15 @@ class GlowVocoder(Vocoder):
     def check_children_attributes(self):
         if self.stft is None:
             try:
-                n_fft = self.audio_to_melspec_precessor.n_fft
-                hop_length = self.audio_to_melspec_precessor.hop_length
-                win_length = self.audio_to_melspec_precessor.win_length
-                window = self.audio_to_melspec_precessor.window.to(self.device)
+                n_fft = self.audio_to_melspec_preprocessor.n_fft
+                hop_length = self.audio_to_melspec_preprocessor.hop_length
+                win_length = self.audio_to_melspec_preprocessor.win_length
+                window = self.audio_to_melspec_preprocessor.window.to(self.device)
             except AttributeError as e:
                 raise AttributeError(
-                    f"{self} could not find a valid audio_to_melspec_precessor. GlowVocoder requires child class "
-                    "to have audio_to_melspec_precessor defined to obtain stft parameters. "
-                    "audio_to_melspec_precessor requires n_fft, hop_length, win_length, window, and nfilt to be "
+                    f"{self} could not find a valid audio_to_melspec_preprocessor. GlowVocoder requires child class "
+                    "to have audio_to_melspec_preprocessor defined to obtain stft parameters. "
+                    "audio_to_melspec_preprocessor requires n_fft, hop_length, win_length, window, and nfilt to be "
                     "defined."
                 ) from e
 
@@ -165,11 +165,11 @@ class GlowVocoder(Vocoder):
 
         if self.n_mel is None:
             try:
-                self.n_mel = self.audio_to_melspec_precessor.nfilt
+                self.n_mel = self.audio_to_melspec_preprocessor.nfilt
             except AttributeError as e:
                 raise AttributeError(
-                    f"{self} could not find a valid audio_to_melspec_precessor. GlowVocoder requires child class to "
-                    "have audio_to_melspec_precessor defined to obtain stft parameters. audio_to_melspec_precessor "
+                    f"{self} could not find a valid audio_to_melspec_preprocessor. GlowVocoder requires child class to "
+                    "have audio_to_melspec_preprocessor defined to obtain stft parameters. audio_to_melspec_preprocessor "
                     "requires nfilt to be defined."
                 ) from e
 

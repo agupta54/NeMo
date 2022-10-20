@@ -46,7 +46,7 @@ class WaveGlowModel(GlowVocoder, Exportable):
         super().__init__(cfg=cfg, trainer=trainer)
 
         self.sigma = self._cfg.sigma
-        self.audio_to_melspec_precessor = instantiate(self._cfg.preprocessor)
+        self.audio_to_melspec_preprocessor = instantiate(self._cfg.preprocessor)
         self.waveglow = instantiate(self._cfg.waveglow)
         self.loss = WaveGlowLoss()
 
@@ -65,7 +65,7 @@ class WaveGlowModel(GlowVocoder, Exportable):
             raise ValueError(
                 f"WaveGlowModel's mode {self.mode} does not match WaveGlowModule's mode {self.waveglow.mode}"
             )
-        spec, spec_len = self.audio_to_melspec_precessor(audio, audio_len)
+        spec, spec_len = self.audio_to_melspec_preprocessor(audio, audio_len)
         tensors = self.waveglow(spec=spec, audio=audio, run_inverse=run_inverse, sigma=self.sigma)
         if self.mode == OperationMode.training:
             return tensors[:-1]  # z, log_s_list, log_det_W_list
@@ -134,7 +134,7 @@ class WaveGlowModel(GlowVocoder, Exportable):
                 outputs[0].values(),
                 self.global_step,
                 tag="eval",
-                mel_fb=self.audio_to_melspec_precessor.fb,
+                mel_fb=self.audio_to_melspec_preprocessor.fb,
             )
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         self.log('val_loss', avg_loss)
